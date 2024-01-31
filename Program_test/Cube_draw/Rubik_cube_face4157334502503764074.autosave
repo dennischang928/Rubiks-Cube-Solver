@@ -1,0 +1,130 @@
+class Face {
+  int neighboor_index[] = new int[4];
+  int NBR_X[][] = new int[4][3];
+  int NBR_Y[][] = new int[4][3];
+  char state[][]  = { 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}    };
+  void AddNeighboor(int neighboor_i[], boolean ARR[]) {
+    neighboor_index = neighboor_i;
+  }
+
+  void Add_NBR_Addr(int X[][], int Y[][]) {
+    NBR_X = X;
+    NBR_Y = Y;
+  }
+
+  void printface() {
+    for (int y = 0; y < 3; y++) {
+      for (int x = 0; x < 3; x++) {
+        print(state[x][y]);
+      }
+      println("");
+    }
+  }
+  int [][] corrID(int yourINDEX, boolean ARR) {
+    int ID[][] = new int[2][3];
+    for (int i =0; i<4; i++) {
+      if (neighboor_index[i]==yourINDEX) {
+        int X_t = 0;
+        int Y_t = 0;
+        if (i == 0) {
+          for (int x = 0; x<3; x++) {
+            ID[0][x] = x;
+            ID[1][x] = 0;
+          }
+        } else  if (i == 1) {
+          for (int x = 0; x<3; x++) {
+            ID[0][x] = x;
+            ID[1][x] = 2;
+          }
+        } else if (i == 2) {
+          for (int y = 0; y<3; y++) {
+            ID[0][y] = 0;
+            ID[1][y] = y;
+          }
+        } else if (i == 3) {
+          for (int y = 0; y<3; y++) {
+            ID[0][y] = 2;
+            ID[1][y] = y;
+          }
+        } 
+        if (ARR != true) {
+           ID[0] = {1,2,3  }
+          println("1");
+          int b = 3;
+          int[][] ID_CP = ID;
+          for (int  y=0; y<3; y++) {
+            b--;
+            ID[0][y] = ID_CP[0][b];
+            ID[1][y] = ID_CP[1][b];
+          }
+        }
+      }
+    }
+    return(ID);
+  }
+
+  void Chg_Face_CLR(char CLR) {
+    for (int x = 0; x < 3; x++) {
+      for (int y = 0; y < 3; y++) {
+        state[x][y] = CLR;
+      }
+    }
+  }
+
+  void Chg_Color(int x, int y, char CLR) {
+    state[x][y] =  CLR;
+  }
+
+  void Chg_ROW_CLR(int ROW, char CLR) {
+    for (int x = 0; x < 3; x++) {
+      state[x][ROW] = CLR;
+    }
+  }
+
+  void Chg_COL_CLR(int COL, char CLR) {
+    for (int y = 0; y < 3; y++) {
+      state[COL][y] = CLR;
+    }
+  }
+
+  void DrawFace(int x, int y, int size) { //size : every cell's size
+    stroke(0);
+    strokeWeight(size*0.1);
+    for (int X = 0; X < 3; X++) {
+      for (int Y = 0; Y < 3; Y++) {
+        rectMode(CORNER);
+        fill(Char_to_CLR(state[X][Y]));
+        rect(x+X*size, y+Y*size, size, size);
+      }
+    }
+  }
+}
+
+color Char_to_CLR(char input) {
+  color output = 0;
+  if (input =='R') {
+    output=color(255, 0, 0);
+  }
+  if (input =='G') {
+    output=color(0, 255, 0);
+  }
+  if (input =='B') {
+    output=color(0, 0, 255);
+  }
+  if (input =='O') {
+    output=color(255, 165, 0);
+  }
+  if (input =='Y') {
+    output=color(255, 255, 0);
+  }
+  if (input =='W') {
+    output=color(255, 255, 255);
+  }
+  if (input =='E') {
+    output=color(0);
+  }
+  return(output);
+}

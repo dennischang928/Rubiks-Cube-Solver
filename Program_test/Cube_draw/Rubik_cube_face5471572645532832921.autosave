@@ -1,0 +1,26 @@
+
+class Face {
+  Face neighboor[] = new Face[4];
+  char state[][]  = { 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}    };
+  void AddNeighboor(Face neighboor_i[]) {
+    neighboor = neighboor_i;
+  }
+  void printface() {
+    for (int y = 0; y < 3; y++) {
+      for (int x = 0; x < 3; x++) {
+        print(state[x][y]);
+      }
+      println("");
+    }
+  }
+  void Chg_Color(int x, int y, char CLR) {
+    state[x][y] =  CLR;
+  }
+  void Chg_ROW_CLR(int ROW, char CLR) {
+    for (int y = 0; y<3; y++) {
+    }
+  }
+}

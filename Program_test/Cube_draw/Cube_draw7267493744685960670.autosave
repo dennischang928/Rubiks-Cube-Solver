@@ -1,0 +1,17 @@
+  int cube_size = 3; //(3*3)
+Face faces[] = new Face[4];
+Cube Rubiks = new Cube();
+void setup() {
+  for (int i =0; i<4; i++) {
+    faces[i] = new Face();
+  }
+  size(1000, 800);
+  Rubiks.AddCHD(faces);
+}
+void draw() {
+
+  faces[0].Chg_ROW_CLR(2, 'R');
+  faces[0].Chg_Color(0, 0, 'O');
+  faces[0].Chg_COL_CLR(1, 'W');
+  Rubiks.DrawCube(50);
+}

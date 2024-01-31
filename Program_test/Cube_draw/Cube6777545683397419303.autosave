@@ -1,0 +1,7 @@
+class Cube {
+  Face Child[];
+  void AddFace(Face CHD[]) {
+    Child = CHD;
+    
+  }
+}

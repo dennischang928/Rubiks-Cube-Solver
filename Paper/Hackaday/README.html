@@ -1,0 +1,410 @@
+
+    <html>
+      <head>
+        <title>MyPageTitle</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
+      <body>
+        <div id='content'>
+    <p><img src="https://images.unsplash.com/photo-1588850561016-f275c8d35eab?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=3000&q=80" alt="SubPage" /></p>
+<h1 id="rubiks-cube-solving-robot">Rubik's-Cube-Solving-Robot</h1>
+<h1 id="abstract">Abstract</h1>
+<p>Rubik's Cube, a 3-D combination puzzle invented by Ernő Rubik in 1974, is the World’s top-selling puzzle game and best-selling toy. Rubik's Cube is surprisingly complex, there are 43,252,003,274,489,856,000 permutations of a standard 3×3×3 Rubik's Cube. Although humans are impossible to memorize all permutations of a Rubik’s Cube, humans can solve the puzzle as fast as 3.47 seconds. In recent years, a robot developed by MIT students can solve it in 0.38 seconds using an optimal algorithm.<br />
+In this project, I developed a Rubik’s Cube-solving robot using a Computer Vision algorithm from scratch. The robot has 4 stepper motors and 4 servo motors as actuators. A camera is included to observe each color arrangement of the face of the Cube in a scrambled state sequentially. The image that the camera observed will be sent through a serial interface to the computer. I implement a solving algorithm that will take the Cube state as input and the sequence of moves that solve the Cube as an output. The sequence of moves is sent to the MCU and is then translated into a series of instructions. The stepper motors and the servo motors then work together to twist the Cube according to the instructions, fully solving the Cube.</p>
+<h1 id="contents">Contents</h1>
+<ul>
+<li>Abstract</li>
+<li>Motivation</li>
+<li>Introduction</li>
+<li>Materials</li>
+<li>Designs</li>
+<li>Hardware<ul>
+<li>Actuators</li>
+<li>Camera</li>
+<li>Electronics</li></ul></li>
+<li>Programming<ul>
+<li>Computer vision</li>
+<li>Thistlethwaite's algorithm</li>
+<li>Firmware</li></ul></li>
+<li>Challenges and Conclusion</li>
+<li>Reference</li>
+<li>Appendix — Workflow of the Rubik's Cube solving robot</li>
+</ul>
+<h1 id="motivation">Motivation</h1>
+<p>In recent years, Computer Vision becomes more popular. Computer Vision has a lot of applications, such as object detection, event detection, video tracking, and color recognition. To familiarize myself in the field, I decide to develop a robot that solves a Rubik’s Cube using Computer Vision.<br />
+The goal is to fully solve a Rubik’s cube by twisting it using clamps attached to stepper and Servo motors. We will use a camera to capture each face of the cube. A computer will then be used, using the computer vision algorithm, to process these images and find out the color of the 9 stickers in each face. Once the color states of the cube are determined, the computer can then compute the sequence of moves that fully solve the cube.</p>
+<h1 id="introduction">Introduction</h1>
+<p>I design the robot using Fusion 360 and Eagle. This robot consists of 4 stepper and Servo motors, 4 pairs of 3d-printed clamp and frame, a camera, and a PCB board with a microcontroller and 4 stepper motor drivers.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/bot.png" alt="https://cdn.hackaday.io/files/1825117808550624/bot.png" /></p>
+<p>The design of the robot ^</p>
+<p>To know the initial state of the Cube, I use a camera to capture the color of the Cube. Since the camera can only capture a single face of the Cube each time, the robot needs to rotate the Cube for the camera to capture all the faces of the cube. After capturing, the camera is going to send those images to the computer through a USB port.</p>
+<p>The computer will then detect the position and orientation of each face from all 6 images. By using these information, the computer can find out the position and area of each sticker of the Cube in those images. The computer can now extract the color of each sticker, and determine the color of each sticker using computer vision.</p>
+<p>Once the initial state of the Cube is found, the computer solves the Cube using Thistlethwaite's algorithm. The solution, the sequence of moves represented in Rubik's Cube Notation, will then be sent from the computer to the microcontroller. Afterwards, the microcontroller translates these notations into a series of stepper and Servo motors movements that twist the Cube and fully solve the Cube.</p>
+<h1 id="materials">Materials</h1>
+<ul>
+<li>4 stepper and Servo motors</li>
+<li>4 3d-printed clamps attached to the stepper motors</li>
+<li>An Arduino nano and 4 stepper motor drivers</li>
+<li>A DC transformer</li>
+<li>A fill light</li>
+</ul>
+<h1 id="designs">Designs</h1>
+<h2 id="hardware">Hardware</h2>
+<h3 id="actuators">Actuators</h3>
+<p>To physically twist and rotate the cube, I use 4 NEMA 17 stepper motors that use a clamp to clip and twist 4 individual faces of the cube. I have considered using DC motors and brushless motors, but both of them can't know their physical rotated-angle without an encoder, so they can't twist the cube precisely.</p>
+<p>I have considered using DC motors and brushless motors, but both of them can't twist the Cube precisely because their physical rotated-angle cannot be determined without an encoder.</p>
+<p>Although Servo motors can rotate precisely to an angle, most Servo motors can only rotate from 0 degrees to 180 degrees. <add a reason why 0-180 is bad> Therefore, I decided to use stepper motors because they are continuous(they can rotate in one direction infinitely) and can rotate precisely. Therefore, a stepper motor will perfectly fit our use case.</p>
+<p>Stepper motors operate using a coil to attract the permanent magnets that encircle the center axle. By energizing the coils, the axle of the motor can rotate precisely by 1.8 degrees. (Stepper motors take 200 steps to make a complete rotation, so its resolution is 1.8 degree = (360° /200 steps))</p>
+<p>Stepper motors move in steps. For example, a stepper motor with 200 steps resolution will rotate 1.8 degrees angle for one step (360° / 200 steps).</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/2_10.png" alt="2_10.png" /></p>
+<p>Simplified stepper motor rotates 3 steps.</p>
+<p>Stepper motor is an Open Loop Control System, we don't know its position upon start-up.</p>
+<p>In order to twist the Cube properly, the clamp needs to be aligned vertically with the Cube. Therefore, I design a device that uses a distance sensor to provide feedback for the motor to align the clamp and the cube. The device consists of a disk attached to the axle of the motor and an IR Sensor facing the disk. The cube and clamp are in perfect alignment when the IR Sensor faces the hole directly. Hence, by reading the sensor value, the motor can rotate the clamp until it aligns perfectly with the cube.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/%E8%9E%A2%E5%B9%95%E6%88%AA%E5%9C%96_2021-08-16_17.51.25.png" alt="螢幕截圖 2021-08-16 17.51.25.png" /></p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/%E8%9E%A2%E5%B9%95%E6%88%AA%E5%9C%96_2021-08-16_17.51.08.png" alt="螢幕截圖 2021-08-16 17.51.08.png" /></p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/IMG_2260.heic" alt="IMG_2260.HEIC" /></p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/maxresdefault1.jpeg" alt="maxresdefault1.jpeg" /></p>
+<p>Fig 1</p>
+<p>I found a problem when the clamp is twisting the cube. If one of the clamps rotates horizontally, the clamps on its left and right can't twist the cube because the clamp that is horizontal blocks their rotation. Tj is also a Servo motor that is responsible to separate the clamp from the cube so that all clamps can rotate freely. As shown in the image on the left</p>
+<p>In contrast to the stepper motor, Servo motor is a Closed Loop control system. When the Servo motor is moving, the position given by the potentiometer as feedback (Fig 1)<br />
+is sent to the Servo motor control board to ensure it rotates to the expected position.</p>
+<p>I use Rack and pinion mechanics to convert the rotational motion of the Servo motor into linear motion to separate the clamp from the cube.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/%E8%9E%A2%E5%B9%95%E6%88%AA%E5%9C%96_2021-08-17_11.19.00.png" alt="螢幕截圖 2021-08-17 11.19.00.png" /></p>
+<h3 id="camera">Camera</h3>
+<p>To determine the initial state of a Rubik's cube, I use a camera to capture the color of each face of the Rubik's cube. I chose a Logitech Webcam as the camera because it has HD resolution and an autofocus function. Moreover, the camera allows you to adjust the brightness, sharpness, contrast, and saturation of the image. By adjusting these values, the images will become sharper and easier for the computer to distinguish colors.</p>
+<p>Trying to distinguish color from the image that the camera sends to the computer, I find that if the ambient light around the cube is unstable, the color recognition program will be extremely inaccurate. To make sure the projected light on the cube is consistent, I added an artificial light source to maintain the brightness of the image. Therefore, I use 4 LED strings to supply light in 4 directions, so the brightness anywhere on the face of the cube is the same.</p>
+<h3 id="electronics">Electronics</h3>
+<p>Instead of using a commercial CNC control board that can control stepper motors easily, I am going to design my robot controller PCB that can control 4 stepper motors and 4 Servo motors of my robot because most commercial CNC control boards can't control 2 or more Servo motors. Also, there is a lot of limitations of programming these commercial PCB board, so I decided to make my own control board.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/V1.jpg" alt="V1.jpg" /></p>
+<p>Robot control board</p>
+<ul>
+<li>Microcontroller</li>
+</ul>
+<p>In order to control the whole robot, I decided to use Arduino nano to control the whole system because it is smaller than Arduino UNO and easy to program. Arduino Nano has a built-in Mini USB jack, so it can communicate with the computer through a Serial port with the Mini USB jack.</p>
+<ul>
+<li>Stepper Motor Control</li>
+</ul>
+<p>Although stepper motors have a lot of advantages, controlling stepper motors often require sufficient and controlled energy for phases in a precise sequence, so a driver is often needed. Due to this, I plan to use 4 A4988 stepper motor drivers to control all of my stepper motors of the robot.</p>
+<p>Each A4988 motor driver required 2 control signal pins (step, direction) and 3 setup signal pins(MS1, MS2, MS3). The step and direction pins are used to control the movement of the stepper motors. The direction pin controls the rotating direction of the motor, and we can control the movement of a step of the motor by sending a pulse to the step pin. The MS1, MS2, MS3 pins are used to control the step of the stepper motor. By changing the input state of these pins to logic low or logic high, you can select one of the five steps resolutions according to the table(Fig 2).</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/A4988-Truth-Table1.png" alt="A4988-Truth-Table1.png" /></p>
+<p>Fig 2</p>
+<ul>
+<li>Servo motors Control</li>
+</ul>
+<p>A Servo motor can be controlled by sending a series of pulses through the signal pin. By changing the width of these pulses, we can control the Servo motor rotates to different angles.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/RC-Servo-Motor-Control-Signal.jpg" alt="RC-Servo-Motor-Control-Signal.jpg" /></p>
+<p>How pulses with different widths control the Servo motor</p>
+<h2 id="programming">Programming</h2>
+<h3 id="computer-visions">Computer visions</h3>
+<p>In order to determine the color arrangement of each of the images captured by the camera precisely, I implemented a method that can find out the difference between two colors.<br />
+A color model is a visualization that depicts the color spectrum as a multidimensional model. There are some commonly used color models in the world. Most modern color models have 3 dimensions (like RGB and HSV), while other models have more dimensions (like CMYK), and I am going to compare these different color models and find out which of them are more reliable in this project.</p>
+<hr />
+<ul>
+<li><p>RGB</p>
+<p>RGB is a 3-dimensional color model. RGB color model represents a color by mixing three different colors (Red, Green, and Blue). Although RGB color model is commonly used in our daily life, RGB color model is a non-uniform color model, which means the Euclidian distance of two colors represented by the RGB color model does not correspond to the color difference perceived by humans.</p>
+<p><em>Euclidian distance:</em></p>
+<p>$distance=√((R2−R1)^2+(G2−G1)^2+(B2−B1)^2)$</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/Untitled.png" alt="Untitled" /></p></li>
+</ul>
+<hr />
+<ul>
+<li><p>HSV</p>
+<p>HSV is a cylindrical color model that remaps the RGB primary colors into dimensions that are easier for humans to understand.</p>
+<p>In HSV color model, we can represent a color with 3 variables (Hue, Saturation, Value). Hue controls the angle of the color on the RGB color circle; Saturation controls the amount of color used; Value controls the brightness of the color.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/Untitled%201.png" alt="Untitled" /></p>
+<p>HSV (cylindrical color model)</p></li>
+</ul>
+<hr />
+<ul>
+<li><p>CIELAB</p>
+<p>CIELAB color model is three-dimensional, you can represent a color with 3 variables in CIELAB color model while L stands for perceptual lightness, and A and B stand for the four unique colors of human vision: red, green, blue, and yellow. In short, CIELAB is designed to approximate human vision, so it can describe a color more accurate than RGB and HSV color models can.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/Untitled%202.png" alt="Untitled" /></p>
+<p>CIELAB color space top view</p></li>
+</ul>
+<p>According to the comparison, I think using CIELAB color model in the Computer Vision method has a lot of advantages, so I plan to use CIELAB color model to represent a color in the Computer Vision method.</p>
+<p>When the computer wants to distinguish which color (orange, white, blue, red, yellow, green) of a sticker is, the most important thing is to find out the distance between the sticker pixel color and the reference colors, so the computer can then compare the distance between these reference colors, and distinguish the color. In order to get the color difference between two colors reliably, I use a CIEDE2000 ΔE method instead of the Euclidean distance method because the CIEDE2000 ΔE method is more reliable for human vision.</p>
+<p>Given a reference color (L<em>1, a</em>1, b<em>1) and another color (L</em>2, a<em>2, b</em>2), the CIEDE2000 difference of these 2 colors is:</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/equation.svg" alt="equation.svg" /></p>
+<p>CIEDE2000 ΔE formula<br />
+<a href="https://en.wikipedia.org/wiki/Color_difference">https://en.wikipedia.org/wiki/Color_difference</a></p>
+<p>Where:</p>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/2940920f995d52312ede05214ffa3c60f0db9b7f">https://wikimedia.org/api/rest_v1/media/math/render/svg/2940920f995d52312ede05214ffa3c60f0db9b7f</a></p>
+<p>CIEDE2000 ΔE formula<br />
+<a href="https://en.wikipedia.org/wiki/Color_difference">https://en.wikipedia.org/wiki/Color_difference</a></p>
+<p>Because of the rotation of the cube, the cube position may always shift when scanning the cube, so I have to frequently adjust the cube detect area of the camera manually before scanning it, and I think that adjusting the cube manually is annoying, especially when I'm debugging the program.</p>
+<p>Then, I try to implement a cube position tracking program in the solver, so that the solver can adjust the detect area automatically.</p>
+<p>The tracking program is actually dum. First of all, the program is going to make the dimmer place of the image more dimmer; the brighter place brighter. The program can then find out the position of the centerpiece of the cube by comparing the pixel of the filtered image. The program can then find out the position of other pieces.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/DX.jpeg" alt="DX.jpeg" /></p>
+<p>Image before filter</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/2021-08-12_17.28.57.png" alt="2021-08-12_17.28.57.png" /></p>
+<p>Filtered image</p>
+<h3 id="thistlethwaites-algorithm">Thistlethwaite's algorithm</h3>
+<p>After finding the state of the cube, the computer will then solve the cube using Thistlethwaite's algorithm. Thistlethwaite's algorithm is a famous algorithm devised by Morwen B. Thistlethwaite.</p>
+<p>Before I explain how the algorithm works, we first have to know how do people represent a twist of a cube. People usually use a notation called Rubik's Cube Notation to represent a twist of a cube. The twist of a Rubik's Cube is classified into three categories of Notations (clockwise twist, counterclockwise twist, double clockwise twist).</p>
+<ul>
+<li>The notation with only one letter refers to a clockwise face twist in 90 degrees (quarter turn). "F" refers to a clockwise turn of the Front face in 90 degrees.</li>
+<li>The notation with one letter followed by an apostrophe (') refers to a counterclockwise face twist in 90 degrees (quarter turn). "D'" refers to a counterclockwise turn of the Down face in 90 degrees.</li>
+<li>The notation with one letter followed by the number 2 refers to a clockwise face twist in 180 degrees (double turn). "U2" refers to a clockwise turn of the Up face in 180 degrees.</li>
+</ul>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/Untitled%203.png" alt="Untitled" /></p>
+<p>Thistlethwaite algorithm solves a cube by twisting the cube by a certain set of moves. When the cube reaches a specific state, the cube will "move" from one "group" to another. As the cube reaches another "group", the set of moves of the cube will change and the cube will be easier to solve computationally.</p>
+<p>The groups are:</p>
+<ul>
+<li>Group 0:</li>
+</ul>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/2dbdffdebca6e844bdf3c7548a8033992ef6ac79">https://wikimedia.org/api/rest_v1/media/math/render/svg/2dbdffdebca6e844bdf3c7548a8033992ef6ac79</a></p>
+<p>Required Cube state: This group contains all possible states of the Rubik's Cube.</p>
+<hr />
+<ul>
+<li>Group 1:</li>
+</ul>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/116b5e3559d97ddaa688362537461712c1435f10">https://wikimedia.org/api/rest_v1/media/math/render/svg/116b5e3559d97ddaa688362537461712c1435f10</a></p>
+<p>Required Cube state: All 12 edge pieces are correctly oriented.</p>
+<p>After reaching Group 1, The cube can then be solved without using U and D turns.</p>
+<hr />
+<ul>
+<li>Group 2:</li>
+</ul>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/ab29e5a1ef0d23014458f9603f6c108b7aec73a6">https://wikimedia.org/api/rest_v1/media/math/render/svg/ab29e5a1ef0d23014458f9603f6c108b7aec73a6</a></p>
+<p>Required Cube state: All corner pieces are correctly oriented. Also, four of the edge pieces are moved to the correct slice: the front-up, front-down, back-up, and back-down edge pieces are placed in the M slice.</p>
+<p>After reaching Group 2, The cube can then be solved without using F, B, U, and D moves.</p>
+<hr />
+<ul>
+<li>Group 3:</li>
+</ul>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/b9990ca7e1121afb33509d738d77f1d0c455be62">https://wikimedia.org/api/rest_v1/media/math/render/svg/b9990ca7e1121afb33509d738d77f1d0c455be62</a></p>
+<p>Required Cube state: All corner pieces are moved to the correct orbit. (A corner is in the correct orbit if it can be moved to its home position with only 180-degree twists.) Also, each edge piece is moved to its home slice.</p>
+<p>At that point, the cube can be solved with only 180 degrees turn.</p>
+<hr />
+<ul>
+<li>Group 4:</li>
+</ul>
+<p><a href="https://wikimedia.org/api/rest_v1/media/math/render/svg/27929bbe730561ca9eb1540e72756b5674436bb5">https://wikimedia.org/api/rest_v1/media/math/render/svg/27929bbe730561ca9eb1540e72756b5674436bb5</a></p>
+<p>The final group requires only one state, which is a solved cube.</p>
+<h3 id="firmware">Firmware</h3>
+<p>In this project, I use Arduino nano board as my microcontroller to control the stepper motors and servo motors. I implement an Arduino stepper motor driver library in the Arduino board to control the movement of the Stepper motors. For the Servo motors, I use an Arduino built-in Servo library to control them.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/crowduino_nano_v3.1_arduino_compatible_3.jpg" alt="crowduino_nano_v3.1_arduino_compatible_3.jpg" /></p>
+<p>There is a lot of ways to communicate between the computer and the Arduino board, such as I2C, Serial communication, and SPI. I decided to use the Serial communication way because it is widely used in the Arduino board (Every Arduino board has its own Serial port). For an Arduino Nano board, it has a built-in mini-USB jack</p>
+<p>Here is a case of communication:</p>
+<p>The Computer aims to twist the Cube in U U2 D2:</p>
+<p><strong>Step 1:</strong> The computer sends a command("U U2 D2") to the Solver through the Serial interface.</p>
+<p><strong>Step 2:</strong> The Solver receives the command and controls the Stepper motors and the Servo motors to twist the Cube according to the command.</p>
+<p><strong>Step 3:</strong> After twisting the cube, the Solver will send a signal to the computer. Let the computer knows that it has done the task.</p>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/Diagram.svg" alt="Diagram.svg" /></p>
+<h1 id="challenges-and-conclusion">Challenges and Conclusion</h1>
+<p>After assembling the Solver, there are some problems that I have experienced. When designing this robot, I aim to use a magnetic encoder to monitor the position of the Stepper motor. After I fully assembled the Solver, I try to read the value of the magnetic encoders by connecting them in parallel using I2C, but then I found that these magnetic encoders have the same I2C addresses, and I can't change the addresses. Therefore, the microcontroller can't read the values of them using I2C, so I have redesigned the robot, and I use a light sensor as the position monitoring sensor instead of a magnetic sensor.</p>
+<p>There are also some challenges that I have gone through when I programming the robot, such as the inaccuracy of the color detection. To fix the issue, I add an artificial light source to stabilize the light condition of the cube.</p>
+<p>The robot also experienced some issues when the stepper motor rotate. Because the stepper motor provides no feedback to the microcontroller, the stepper motor can't affirm a perfect 90 degrees twist is executed. Also, there are gaps between the clamp and the Cube, so there will be some degrees of error when twisting the cube. As a result, slight errors accumulated in the alignment of the Cube after a twist. Because of the alignment of the Cube, the rotation of the stepper motor may be stuck, but the stepper motor can't realize that it is stuck, and it will keep executing the following twists.</p>
+<p>Were I to continue work on this project, the following attributes would be changed:</p>
+<ul>
+<li>A Feedback would be added to affirm a perfect 90 degrees twist is executed</li>
+<li>Reduce the size of the Robot.</li>
+<li>Design an adjustable clamp, so that the solver can fit any size of 3*3 Rubik's Cube.</li>
+</ul>
+<h1 id="appendix-—-workflow-of-the-rubiks-cube-solving-robot">Appendix — Workflow of the Rubik's Cube solving robot:</h1>
+<p><img src="https://cdn.hackaday.io/files/1825117808550624/WorkFlow_diagram_of_a_Solver.svg" alt="WorkFlow diagram of a Solver.svg" /></p>
+<p>Rubik's Cube Solving Robot test:<br />
+<a href="https://youtu.be/ZOZHCysa5HY">https://youtu.be/ZOZHCysa5HY</a></p>
+<h1 id="reference">Reference</h1>
+<ul>
+<li>Color models and color spaces <a href="https://programmingdesignsystems.com/color/color-models-and-color-spaces/">https://programmingdesignsystems.com/color/color-models-and-color-spaces/</a></li>
+<li>Color difference - Wikipedia <a href="https://en.wikipedia.org/wiki/Color_difference">https://en.wikipedia.org/wiki/Color_difference</a></li>
+<li>How to control stepper motor with A4988 driver and Arduino <a href="https://howtomechatronics.com/tutorials/arduino/how-to-control-stepper-motor-with-a4988-driver-and-arduino/">https://howtomechatronics.com/tutorials/arduino/how-to-control-stepper-motor-with-a4988-driver-and-arduino/</a></li>
+<li>jeswiezy<em>Project</em>Final<em>Report
+<a href="http://web.mit.edu/6.111/www/f2017/projects/jeswiezy_Project_Final_Report.pdf">http://web.mit.edu/6.111/www/f2017/projects/jeswiezy</em>Project<em>Final</em>Report.pdf</a></li>
+<li>Thistlethwaite's 52-move algorithm<br />
+<a href="https://www.jaapsch.net/puzzles/thistle.htm">https://www.jaapsch.net/puzzles/thistle.htm</a></li>
+<li>Rubik’s Cube Reconstruction from Single View for Service Robots<br />
+<a href="https://www.ia.pw.edu.pl/~wkasprza/PAP/ICCVG06.pdf">https://www.ia.pw.edu.pl/~wkasprza/PAP/ICCVG06.pdf</a></li>
+<li>All About Stepper Motors<br />
+<a href="https://learn.adafruit.com/all-about-stepper-motors/what-is-a-stepper-motor">https://learn.adafruit.com/all-about-stepper-motors/what-is-a-stepper-motor</a></li>
+</ul>
+
+        </div>
+        <style type='text/css'>body {
+  font: 400 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #111;
+  background-color: #fdfdfd;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-feature-settings: "kern" 1;
+  -moz-font-feature-settings: "kern" 1;
+  -o-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+  padding: 30px;
+}
+
+@media only screen and (max-width: 600px) {
+  body {
+    padding: 5px;
+  }
+
+  body > #content {
+    padding: 0px 20px 20px 20px !important;
+  }
+}
+
+body > #content {
+  margin: 0px;
+  max-width: 900px;
+  border: 1px solid #e1e4e8;
+  padding: 10px 40px;
+  padding-bottom: 20px;
+  border-radius: 2px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+hr {
+  color: #bbb;
+  background-color: #bbb;
+  height: 1px;
+  flex: 0 1 auto;
+  margin: 1em 0;
+  padding: 0;
+  border: none;
+}
+
+/**
+ * Links
+ */
+a {
+  color: #0366d6;
+  text-decoration: none; }
+  a:visited {
+    color: #0366d6; }
+  a:hover {
+    color: #0366d6;
+    text-decoration: underline; }
+
+pre {
+  background-color: #f6f8fa;
+  border-radius: 3px;
+  font-size: 85%;
+  line-height: 1.45;
+  overflow: auto;
+  padding: 16px;
+}
+
+/**
+  * Code blocks
+  */
+
+code {
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  word-wrap: break-word;
+  padding: .2em .4em;
+  font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,Courier,monospace;
+}
+
+pre > code {
+  background-color: transparent;
+  border: 0;
+  display: inline;
+  line-height: inherit;
+  margin: 0;
+  overflow: visible;
+  padding: 0;
+  word-wrap: normal;
+  font-size: 100%;
+}
+
+
+/**
+ * Blockquotes
+ */
+blockquote {
+  margin-left: 30px;
+  margin-top: 0px;
+  margin-bottom: 16px;
+  border-left-width: 3px;
+  padding: 0 1em;
+  color: #828282;
+  border-left: 4px solid #e8e8e8;
+  padding-left: 15px;
+  font-size: 18px;
+  letter-spacing: -1px;
+  font-style: italic;
+}
+blockquote * {
+  font-style: normal !important;
+  letter-spacing: 0;
+  color: #6a737d !important;
+}
+
+/**
+ * Tables
+ */
+table {
+  border-spacing: 2px;
+  display: block;
+  font-size: 14px;
+  overflow: auto;
+  width: 100%;
+  margin-bottom: 16px;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+th {
+  font-weight: 600;
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+/**
+ * Others
+ */
+
+img {
+  max-width: 100%;
+}
+
+p {
+  line-height: 24px;
+  font-weight: 400;
+  font-size: 16px;
+  color: #24292e; }
+
+ul {
+  margin-top: 0; }
+
+li {
+  color: #24292e;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5; }
+
+li + li {
+  margin-top: 0.25em; }
+
+* {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #24292e; }
+
+a:visited {
+  color: #0366d6; }
+
+h1, h2, h3 {
+  border-bottom: 1px solid #eaecef;
+  color: #111;
+  /* Darker */ }</style>
+      </body>
+    </html>

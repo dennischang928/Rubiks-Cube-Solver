@@ -1,0 +1,66 @@
+
+class Face {
+  Face neighboor[] = new Face[4];
+  char state[][]  = { 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}, 
+    {'G', 'G', 'G'}    };
+  void AddNeighboor(Face neighboor_i[]) {
+    neighboor = neighboor_i;
+  }
+  void printface() {
+    for (int y = 0; y < 3; y++) {
+      for (int x = 0; x < 3; x++) {
+        print(state[x][y]);
+      }
+      println("");
+    }
+  }
+  void Chg_Color(int x, int y, char CLR) {
+    state[x][y] =  CLR;
+  }
+
+  void Chg_ROW_CLR(int ROW, char CLR) {
+    for (int x = 0; x < 3; x++) {
+      state[x][ROW] = CLR;
+    }
+  }
+
+  void Chg_COL_CLR(int COL, char CLR) {
+    for (int y = 0; y < 3; y++) {
+      state[COL][y] = CLR;
+    }
+  }
+  void DrawFace(int x, int y, int size) { //size : every cell's size
+    for (int x = 0; x < 3; x++) {
+      for (int y = 0; y < 3; y++) {
+        noStroke();
+        rectMode(CORNER);
+        fill(Char_to_CLR(state[x][y]));
+        rect(x+x*size, y+y*size, size, size);
+      }
+    }
+  }
+}
+color Char_to_CLR(Char input) {
+  color output = new color();
+  if (input =='R') {
+    output = color(255, 0, 0);
+  }
+  if (input =='G') {
+    output=(0, 255, 0);
+  }
+  if (input =='B') {
+    output=(0, 0, 255);
+  }
+  if (input =='O') {
+    output=(255, 165, 0);
+  }
+  if (input =='Y') {
+    output=(255, 255, 0);
+  }
+  if (input =='W') {
+    output=(0, 0, 0);
+  }
+  return(output);
+}

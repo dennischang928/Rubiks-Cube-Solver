@@ -1,0 +1,38 @@
+int cube_size = 3; //(3*3) //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+Face faces[] = new Face[6];
+Cube Rubiks = new Cube();
+Face NBR_CLR_CP[] = new Face[4];
+void setup() {
+  for (int i = 0; i < 6; i++) {
+    faces[i] = new Face();
+  }
+
+
+  size(880, 670);
+  Rubiks.AddCHD(faces);
+  Rubiks.resetCLR();  
+  Rubiks.SETUP();
+  Rubiks.Child[0].Chg_Color(0, 0, 'R');
+  Rubiks.Child[0].Chg_Color(2, 2, 'Y');
+  Rubiks.Child[0].Chg_Color(0, 2, 'E');
+  Rubiks.Child[0].Chg_Color(2, 0, 'O');
+  //for(int )
+  Rubiks.Child
+  //Rubiks.rotCLK(0, 2);
+  //Rubiks.rotCLK(4, 2);
+  //Rubiks.rotCLK(5, 2);
+}
+//0B, 1G, 2O, 3R, 4W, 5Y
+void draw() {
+  //Rubiks.cube
+
+  // Rubiks.Child[1].Chg_Color(0,0,'R');
+  Rubiks.DrawCube(70); //<>// //<>//
+
+  //while (true);
+}
+
+int[] find_neighboorXY(int targetID, int myID, char X_OR_Y, boolean ARR) {
+  int X_Y = (X_OR_Y=='X')? 0:1;
+  return(Rubiks.Child[targetID].corrID(myID, ARR)[X_Y]);
+}

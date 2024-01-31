@@ -1,0 +1,47 @@
+  class Cube {
+  Face Child[];
+  void AddCHD(Face CHD[]) {
+    Child = CHD;
+  }
+  void resetCLR() {
+    char CLRlist[] = {'B', 'G', 'O', 'R', 'W', 'Y'};
+    for (int i =0; i<6; i++) {
+      Child[i].Chg_Face_CLR(CLRlist[i]);
+    }
+  }
+  void DrawCube(int size) {
+    pushMatrix();
+    translate(20, 20);
+    pushMatrix();
+    translate(size*3, 0);
+    Child[0].DrawFace(0, 0, size);
+    popMatrix();
+
+    pushMatrix();
+    translate(size*3, size*3*2);
+    Child[1].DrawFace(0, 0, size);
+    popMatrix();
+
+    pushMatrix();
+    translate(0, size*3);
+    Child[2].DrawFace(0, 0, size);
+    popMatrix();
+
+    pushMatrix();
+    translate(size*3*2, size*3);
+    Child[3].DrawFace(0, 0, size);
+    popMatrix();
+
+    pushMatrix();
+    translate(size*3, size*3);
+    Child[4].DrawFace(0, 0, size);
+    popMatrix();
+
+    pushMatrix();
+    translate(size*3*3, size*3);
+    Child[5].DrawFace(0, 0, size);
+    popMatrix();
+
+    popMatrix();
+  }
+}

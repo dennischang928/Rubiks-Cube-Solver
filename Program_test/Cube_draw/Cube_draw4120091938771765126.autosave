@@ -1,0 +1,13 @@
+int cube_size = 3; //(3*3)
+Face up = new Face();
+void setup() {
+}
+void draw() {
+
+  up.Chg_ROW_CLR(2, 'R');
+  up.Chg_Color(1, 0, 'O');
+  up.Chg_COL_CLR(0, 'W');
+  up.printface();
+  while (true) {
+  }
+}

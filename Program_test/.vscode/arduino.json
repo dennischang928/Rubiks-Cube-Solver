@@ -1,0 +1,6 @@
+{
+    "port": "/dev/tty.usbserial-141410",
+    "configuration": "cpu=atmega328",
+    "board": "arduino:avr:nano",
+    "sketch": "Calbration/Calbration.ino"
+}
